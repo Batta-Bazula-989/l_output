@@ -1,4 +1,4 @@
-// /api/webhook.js (at root level)
+// /api/webhook.js (NOT in src, at project root)
 export default function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -12,9 +12,11 @@ export default function handler(req, res) {
   if (req.method === 'POST') {
     const data = req.body;
 
-    // Redirect to your app with the data
-    const encoded = encodeURIComponent(JSON.stringify(data));
-    res.redirect(302, `https://l-output.vercel.app/?data=${encoded}`);
+    // Store data in a cookie to avoid header overflow
+    const cookieData = Buffer.from(JSON.stringify(data)).toString('base64');
+
+    res.setHeader('Set-Cookie', `webhookData=${cookieData}; Path=/; HttpOnly=false; Max-Age=60`);
+    res.redirect(302, '/');
   } else {
     res.status(405).json({ error: 'Method not allowed' });
   }
